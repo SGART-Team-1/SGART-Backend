@@ -1,14 +1,9 @@
 package com.team1.sgart.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Column;
-import java.util.Date;
 import java.util.regex.Pattern;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -28,7 +23,10 @@ public class User extends GenericUser{
 	
 	@Column(name = "Profile")
 	private String profile;
-	
+
+	@Column(name = "email")
+	private String email;
+
 	@Transient
 	private String passwordConfirm;
   
@@ -51,7 +49,7 @@ public class User extends GenericUser{
 		this.password = password;
 		this.passwordConfirm = passwordConfirm;
 		this.blocked = blocked;
-		this.validated = validated;
+		
 	}
 
 	public User() {

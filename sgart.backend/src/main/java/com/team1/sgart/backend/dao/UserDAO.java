@@ -10,7 +10,7 @@ import com.team1.sgart.backend.model.User;
 
 import jakarta.transaction.Transactional;
 
-public interface UserDAO extends JpaRepository<User, String> {
+public interface UserDao extends JpaRepository<User, String> {
 	Optional<User> findByEmail(String email);
 
 	Optional<User> findByEmailAndPassword(String email, String password);

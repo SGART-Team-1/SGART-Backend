@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 import com.team1.sgart.backend.dao.AdminDAO;
-import com.team1.sgart.backend.dao.UserDAO;
+import com.team1.sgart.backend.dao.UserDao;
 import com.team1.sgart.backend.model.Admin;
 import com.team1.sgart.backend.model.User;
 
@@ -27,7 +27,7 @@ public class AdminServiceTest {
     private AdminDAO adminDAO;
 
     @Mock
-    private UserDAO userDAO;
+    private UserDao userDAO;
 
     @InjectMocks
     private AdminService adminService;
