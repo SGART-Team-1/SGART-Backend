@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.team1.sgart.backend.dao.UserDAO;
 import com.team1.sgart.backend.dao.UserDao;
 import com.team1.sgart.backend.model.User;
 
@@ -12,7 +13,7 @@ import com.team1.sgart.backend.model.User;
 public class UserService {
 
 	@Autowired
-	private UserDao userDao;
+	private UserDAO userDao;
 
 	public User registrarUser(User user) {
 		// Comprobar si el email ya está registrado
