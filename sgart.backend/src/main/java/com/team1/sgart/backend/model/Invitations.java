@@ -21,7 +21,7 @@ public class Invitations {
     private User user;
 
     @Column(name = "invitation_status", nullable = false, length = 50)
-    private String invitationStatus;
+    private InvitationStatus invitationStatus;
 
     @Column(name = "user_attendance", nullable = false)
     private boolean userAttendance;
@@ -33,7 +33,7 @@ public class Invitations {
     public Invitations() {}
 
     // Constructor con parámetros
-    public Invitations(Meetings meeting, User user, String invitationStatus, boolean userAttendance, String rejectionReason) {
+    public Invitations(Meetings meeting, User user, InvitationStatus invitationStatus, boolean userAttendance, String rejectionReason) {
         this.meeting = meeting;
         this.user = user;
         this.invitationStatus = invitationStatus;
@@ -71,7 +71,7 @@ public class Invitations {
         return invitationStatus;
     }
 
-    public void setInvitationStatus(String invitationStatus) {
+    public void setInvitationStatus(InvitationStatus invitationStatus) {
         this.invitationStatus = invitationStatus;
     }
 

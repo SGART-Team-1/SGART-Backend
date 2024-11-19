@@ -1,12 +1,15 @@
 package com.team1.sgart.backend.services;
 
 
-import com.team1.sgart.backend.dao.InvitationDAO;
-import com.team1.sgart.backend.dao.MeetingDAO;
+
+
+import com.team1.sgart.backend.dao.InvitationsDao;
+import com.team1.sgart.backend.dao.MeetingsDao;
 import com.team1.sgart.backend.dao.UserDao;
-import com.team1.sgart.backend.model.Invitation;
+import com.team1.sgart.backend.model.Meetings;
+
 import com.team1.sgart.backend.model.InvitationStatus;
-import com.team1.sgart.backend.model.Meeting;
+import com.team1.sgart.backend.model.Invitations;
 import com.team1.sgart.backend.model.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -35,13 +40,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MeetingServiceTest {
 
     @Mock
-    private MeetingDAO meetingDao;
+    private MeetingsDao meetingDao;
 
     @Mock
     private UserDao userDao;
 
     @Mock
-    private InvitationDAO invitationDao;
+    private InvitationsDao invitationDao;
 
     @InjectMocks
     private MeetingService meetingService;
@@ -58,22 +63,21 @@ class MeetingServiceTest {
     void createMeeting_ShouldSaveAndReturnMeeting() {
         // Datos de prueba
         User organizer = new User("organizer@example.com", "Organizer", "User", null, null, null, null, null, null, false, false, null);
-        Meeting meeting = new Meeting("Team Meeting", false, 
-            Time.valueOf("10:00:00"), Time.valueOf("11:00:00"), organizer, "Room 101", "Monthly sync");
+        LocalDate meetingDate = LocalDate.of(2021, 10, 15); // LocalDate.of(year, month, dayOfMonth este es el formato
+        Meetings meeting = new Meetings("Team Meeting", meetingDate, false, LocalTime.of(10, 0), LocalTime.of(11, 0), "Reunión sin stakeholders",
+        		organizer.getID(), UUID.randomUUID());
 
-        when(meetingDao.save(any(Meeting.class))).thenReturn(meeting);
+        when(meetingDao.save(any(Meetings.class))).thenReturn(meeting);
 
         // Llamada al servicio
-        Meeting createdMeeting = meetingService.createMeeting(
-            "Team Meeting", false, 
-            Time.valueOf("10:00:00"), Time.valueOf("11:00:00"), organizer, "Room 101", "Monthly sync"
-        );
+        Meetings createdMeeting = meetingService.createMeeting("Team Meeting", false, meetingDate, LocalTime.of(10, 0), LocalTime.of(11, 0), "Reunión sin stakeholders",
+        		organizer.getID(), UUID.randomUUID());
 
         // Verificaciones
         assertNotNull(createdMeeting);
-        assertEquals("Team Meeting", createdMeeting.getTitle());
-        assertEquals(organizer, createdMeeting.getOrganizer());
-        verify(meetingDao, times(1)).save(any(Meeting.class));
+        assertEquals("Team Meeting", createdMeeting.getMeetingTitle());
+        assertEquals(organizer, createdMeeting.getOrganizerId());
+        verify(meetingDao, times(1)).save(any(Meetings.class));
     }
 
     @Test
@@ -97,58 +101,60 @@ class MeetingServiceTest {
     void inviteUserToMeeting_ShouldSaveAndReturnInvitation() {
         // Datos de prueba
         User user = new User("user@example.com", "User", "Test", null, null, null, null, null, null, false, false, null);
-        Meeting meeting = new Meeting("Project Kickoff", false, 
-            Time.valueOf("09:00:00"), Time.valueOf("10:00:00"), user, "Room 202", "Kickoff meeting");
-        Invitation invitation = new Invitation(meeting, user, InvitationStatus.PENDIENTE, false, null);
+		
+        Meetings meeting = new Meetings("Team Meeting", LocalDate.of(2021, 10, 15), false, LocalTime.of(10, 0),
+				LocalTime.of(11, 0), "Reunión sin stakeholders", UUID.randomUUID(), UUID.randomUUID());
 
-        when(invitationDao.save(any(Invitation.class))).thenReturn(invitation);
+        Invitations invitation = new Invitations(meeting, user, InvitationStatus.PENDIENTE, false, null);
+
+        when(invitationDao.save(any(Invitations.class))).thenReturn(invitation);
 
         // Llamada al servicio
-        Invitation createdInvitation = meetingService.inviteUserToMeeting(meeting, user, InvitationStatus.PENDIENTE);
+        Invitations createdInvitation = meetingService.inviteUserToMeeting(meeting, user, InvitationStatus.PENDIENTE);
 
         // Verificaciones
         assertNotNull(createdInvitation);
-        assertEquals(InvitationStatus.PENDIENTE, createdInvitation.getStatus());
+        assertEquals(InvitationStatus.PENDIENTE, createdInvitation.getInvitationStatus());
         assertEquals(meeting, createdInvitation.getMeeting());
         assertEquals(user, createdInvitation.getUser());
-        verify(invitationDao, times(1)).save(any(Invitation.class));
+        verify(invitationDao, times(1)).save(any(Invitations.class));
     }
 
     @Test
     void getMeetingById_ShouldReturnMeetingIfExists() {
         // Datos de prueba
         UUID meetingId = UUID.randomUUID();
-        Meeting meeting = new Meeting();
-        meeting.setId(meetingId);
+        Meetings meeting = new Meetings();
+        meeting.setMeetingId(meetingId);
 
-        when(((MeetingDAO) meetingDao).findById(meetingId)).thenReturn(Optional.of(meeting));
+        when(meetingDao.findById(meetingId)).thenReturn(Optional.of(meeting));
 
         // Llamada al servicio
-        Optional<Meeting> result = meetingService.getMeetingById(meetingId);
+        Optional<Meetings> result = meetingService.getMeetingById(meetingId);
 
         // Verificaciones
         assertTrue(result.isPresent());
-        assertEquals(meetingId, result.get().getId());
+        assertEquals(meetingId, result.get().getMeetingId());
         verify(meetingDao, times(1)).findById(meetingId);
     }
     
     @Test
     void getAttendeesForMeeting_ShouldReturnAcceptedUsers() {
         // Datos de prueba
-        Meeting meeting = new Meeting();
+        Meetings meeting = new Meetings();
         User user1 = new User();
         User user2 = new User();
-        Invitation invitation1 = new Invitation(meeting, user1, InvitationStatus.ACEPTADA, false, null);
-        Invitation invitation2 = new Invitation(meeting, user2, InvitationStatus.ACEPTADA, false, null);
-        Invitation invitation3 = new Invitation(meeting, new User(), InvitationStatus.RECHAZADA, false, null);
+        Invitations invitation1 = new Invitations(meeting, user1, InvitationStatus.ACEPTADA, false, null);
+        Invitations invitation2 = new Invitations(meeting, user2, InvitationStatus.ACEPTADA, false, null);
+        Invitations invitation3 = new Invitations(meeting, new User(), InvitationStatus.RECHAZADA, false, null);
 
-        List<Invitation> invitations = Arrays.asList(invitation1, invitation2, invitation3);
+        List<Invitations> invitations = Arrays.asList(invitation1, invitation2, invitation3);
 
         // Configurar el mock
-        when(invitationDao.findByMeeting(meeting)).thenReturn(invitations);
+        when(invitationDao.findByMeetingId(meeting.getMeetingId())).thenReturn(invitations);
 
         // Ejecutar el método
-        List<User> attendees = meetingService.getAttendeesForMeeting(meeting);
+        List<UUID> attendees = meetingService.getAttendeesForMeeting(meeting);
 
         // Verificar resultados
         assertEquals(2, attendees.size());

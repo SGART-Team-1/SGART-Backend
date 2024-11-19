@@ -1,10 +1,13 @@
 package com.team1.sgart.backend.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team1.sgart.backend.dao.InvitationDAO;
-import com.team1.sgart.backend.model.Invitation;
+
+
+import com.team1.sgart.backend.dao.InvitationsDao;
+
 import com.team1.sgart.backend.model.InvitationStatus;
-import com.team1.sgart.backend.model.Meeting;
+
+import com.team1.sgart.backend.model.Meetings;
 import com.team1.sgart.backend.model.User;
 import com.team1.sgart.backend.services.MeetingService;
 import com.team1.sgart.backend.services.UserService;
@@ -42,7 +45,7 @@ class MeetingControllerTest {
     private MeetingService meetingService;
     
     @MockBean
-    private InvitationDAO invitationDao;
+    private InvitationsDao invitationDao;
 
     @MockBean
     private UserService userService;
@@ -53,18 +56,18 @@ class MeetingControllerTest {
     @Test
     void createMeeting_ShouldReturnMeeting() throws Exception {
         // Preparar datos de prueba
-        Meeting meeting = new Meeting();
-        meeting.setTitle("Reunión de prueba");
-        meeting.setAllDay(false);
-        meeting.setStartTime(Time.valueOf(LocalTime.of(10, 0, 0)));
-        meeting.setEndTime(Time.valueOf(LocalTime.of(12, 0, 0)));
-        meeting.setOrganizer(new User());
-        meeting.setLocation("Sala 1");
-        meeting.setObservations("Reunión importante");
+        Meetings meeting = new Meetings();
+        meeting.setMeetingTitle("Reunión de prueba");
+        meeting.setMeetingAllDay(false);
+        meeting.setMeetingStartTime(LocalTime.of(10, 0));
+        meeting.setMeetingEndTime(LocalTime.of(12, 0));
+        meeting.setOrganizerId(UUID.randomUUID());
+        meeting.setLocationId(UUID.randomUUID());
+        meeting.setMeetingObservations("Reunión importante");
 
         // Simular comportamiento del servicio
-        Mockito.when(meetingService.createMeeting(anyString(), anyBoolean(), any(), any(), any(), any(), any()))
-                .thenReturn(meeting);
+        Mockito.when(meetingService.createMeeting(anyString(), anyBoolean(), any(), any(), any(),
+        		anyString(), any(), any())).thenReturn(meeting);
 
         // Ejecutar la petición y verificar resultados
         mockMvc.perform(post("/api/meetings/create")
@@ -110,7 +113,7 @@ class MeetingControllerTest {
     void getAttendees_ShouldReturnListOfAttendees() throws Exception {
         // Datos de prueba
         UUID meetingId = UUID.randomUUID();
-        Meeting meeting = new Meeting();
+        Meetings meeting = new Meetings();
         User user1 = new User();
         user1.setID(UUID.randomUUID());
         user1.setName("John Doe");
@@ -119,7 +122,7 @@ class MeetingControllerTest {
         user2.setID(UUID.randomUUID());
         user2.setName("Jane Doe");
 
-        List<User> attendees = Arrays.asList(user1, user2);
+        List<UUID> attendees = Arrays.asList(user1.getID(), user2.getID());
 
         // Configurar los mocks
         when(meetingService.getMeetingById(meetingId)).thenReturn(Optional.of(meeting));
