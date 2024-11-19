@@ -67,13 +67,13 @@ public class Invitations {
         this.user = user;
     }
 
-    public String getInvitationStatus() {
-        return invitationStatus;
-    }
-
-    public void setInvitationStatus(InvitationStatus invitationStatus) {
-        this.invitationStatus = invitationStatus;
-    }
+	public InvitationStatus getInvitationStatus() {
+		return invitationStatus;
+	}
+	
+	public void setInvitationStatus(InvitationStatus invitationStatus) {
+		this.invitationStatus = invitationStatus;
+	}
 
     public boolean isUserAttendance() {
         return userAttendance;
