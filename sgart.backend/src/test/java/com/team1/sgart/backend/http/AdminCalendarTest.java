@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +32,8 @@ public class AdminCalendarTest {
     @Test
     public void testGetAllMeetings() {
         // Arrange
-        MeetingsDTO mockMeeting = new MeetingsDTO(UUID.randomUUID(), "Test Meeting", false, null, null, UUID.randomUUID());
+        MeetingsDTO mockMeeting = new MeetingsDTO(UUID.randomUUID(), "Test Meeting", false, null, null, null,
+        		"Reunion obligatoria", UUID.randomUUID(), "Sala de reuniones 2");
         when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(mockMeeting));
 
         // Act
@@ -86,10 +88,11 @@ public class AdminCalendarTest {
     public void testLoadMeetings_ServiceLayer() {
         // Arrange
         UUID meetingId = UUID.randomUUID();
-        Meetings mockMeeting = new Meetings("Team Meeting", false, null, null, UUID.randomUUID());
+        Meetings mockMeeting = new Meetings("Team Meeting", LocalDate.now(), false, null, null, null, UUID.randomUUID(), UUID.randomUUID());
         mockMeeting.setMeetingId(meetingId);
 
-        when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(new MeetingsDTO(meetingId, "Team Meeting", false, null, null, UUID.randomUUID())));
+        when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(new MeetingsDTO(UUID.randomUUID(), "Test Meeting", false, null,
+        		null, null, "Reunion obligatoria", UUID.randomUUID(), "Sala de reuniones 2")));
 
         // Act
         List<MeetingsDTO> meetings = calendarService.loadMeetings();
