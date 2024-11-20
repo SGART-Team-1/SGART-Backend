@@ -53,7 +53,8 @@ class MeetingServiceTest {
     public MeetingServiceTest() {
         MockitoAnnotations.openMocks(this);
     }
-
+    
+//	ESTE FALLA
     @Test
     void createMeeting_ShouldSaveAndReturnMeeting() {
         // Datos de prueba
@@ -132,6 +133,7 @@ class MeetingServiceTest {
         verify(meetingDao, times(1)).findById(meetingId);
     }
     
+//    ESTE FALLA
     @Test
     void getAttendeesForMeeting_ShouldReturnAcceptedUsers() {
         // Datos de prueba
@@ -155,5 +157,48 @@ class MeetingServiceTest {
         assertEquals(user1, attendees.get(0));
         assertEquals(user2, attendees.get(1));
     }
+    
+    @Test //TDD
+    void testCancelMeetingByOrganizer_Success() {
+    	// Datos de prueba
+        UUID meetingId = UUID.randomUUID();
+        UUID organizerId = UUID.randomUUID();
+        Meetings meeting = new Meetings();
+        meeting.setMeetingId(meetingId);
+        
+        // Configurar el mock para que devuelva la reunión
+        when(meetingDao.findById(meetingId)).thenReturn(Optional.of(meeting));
+
+        // Ejecutar el método
+        boolean result = meetingService.cancelMeetingByOrganizer(meetingId, organizerId);
+
+        // Verificar comportamiento y resultado
+        assertTrue(result);
+        verify(meetingDao, times(1)).findById(meetingId);
+        verify(meetingDao, times(1)).delete(meeting);
+    }
+    
+    @Test //TDD
+    void testCancelMeetingByOrganizer_MeetingNotFound() {
+    	// Datos de prueba
+        UUID meetingId = UUID.randomUUID();
+        UUID organizerId = UUID.randomUUID();
+        Meetings meeting = new Meetings();
+        meeting.setMeetingId(meetingId);
+        
+        // Configurar el mock para que no encuentre la reunión
+        when(meetingDao.findById(meetingId)).thenReturn(Optional.empty());
+
+        // Ejecutar el método y verificar excepción
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> 
+            meetingService.cancelMeetingByOrganizer(meetingId, organizerId)
+        );
+        assertEquals("Reunión no encontrada", exception.getMessage());
+
+        // Verificar comportamiento
+        verify(meetingDao, times(1)).findById(meetingId);
+        verify(meetingDao, never()).delete(any(Meetings.class));
+    }
+
 
 }

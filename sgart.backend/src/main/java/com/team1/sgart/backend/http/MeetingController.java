@@ -6,7 +6,10 @@ import com.team1.sgart.backend.model.InvitationStatus;
 import com.team1.sgart.backend.model.Invitations;
 import com.team1.sgart.backend.services.MeetingService;
 import com.team1.sgart.backend.services.UserService;
+
+import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,6 +82,19 @@ public class MeetingController {
         Meetings meeting = meetingService.getMeetingById(meetingId).orElseThrow(() -> new RuntimeException("ERROR: Reunión no encontrada"));
         return meetingService.getAttendeesForMeeting(meeting);
     }
+    
+
+    
+    @DeleteMapping("/{meetingId}")
+    public ResponseEntity<Void> cancelMeeting(@PathVariable UUID meetingId, @RequestParam UUID organizerId) {
+        try {
+            meetingService.cancelMeetingByOrganizer(meetingId, organizerId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).build();
+        }
+    }
+    
     
 }
 

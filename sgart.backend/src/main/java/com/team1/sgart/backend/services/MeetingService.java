@@ -44,7 +44,7 @@ public class MeetingService {
 
     // Método para invitar a un usuario a una reunión
     public Invitations inviteUserToMeeting(Meetings meeting, User user, InvitationStatus status) {
-        Invitations invitation = new Invitations(meeting, user, status.name(), false, null);
+        Invitations invitation = new Invitations( meeting, user, status, false, null);
         return invitationDao.save(invitation);
     }
 
@@ -59,7 +59,7 @@ public class MeetingService {
 
         // Filtramos aquellas con estado ACEPTADA y devolvemos los usuarios
         return invitations.stream()
-                .filter(invitation -> InvitationStatus.valueOf(invitation.getInvitationStatus()) == InvitationStatus.ACEPTADA)
+                .filter(invitation -> invitation.getInvitationStatus() == InvitationStatus.ACEPTADA)
                 .map(invitation -> invitation.getUser().getID())
                 .collect(Collectors.toList());
     }
@@ -68,4 +68,20 @@ public class MeetingService {
     public List<Object[]> getDetailedInvitationsForMeeting(UUID meetingId) {
         return invitationDao.findDetailedInvitationsByMeetingId(meetingId);
     }
+    
+    // Método para cancelar una reunión MANUAL por organizador
+    public boolean cancelMeetingByOrganizer(UUID meetingId, UUID organizerId) {
+        // Recuperamos la reunión por su ID
+        Optional<Meetings> meetingOpt = meetingDao.findById(meetingId);
+        if (meetingOpt.isEmpty()) {
+            throw new RuntimeException("Reunión no encontrada");
+        }
+
+        Meetings meeting = meetingOpt.get();
+        meetingDao.delete(meeting); //cancelada = eliminada 
+
+        return true;
+    }
+
+    
 }
