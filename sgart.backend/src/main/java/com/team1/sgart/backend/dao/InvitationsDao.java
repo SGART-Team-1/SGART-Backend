@@ -25,6 +25,9 @@ public interface InvitationsDao extends JpaRepository<Invitations, Integer> {
 
     @Query("SELECT i FROM Invitations i WHERE i.meeting.meetingId = :meetingId")
     List<Invitations> findByMeetingId(@Param("meetingId") UUID meetingId);
+    
+    @Query("SELECT i FROM Invitations i WHERE i.meeting.meetingId = :meetingId AND i.invitation_id <> :excludedInvitationId")
+    List<Invitations> findByMeetingIdAndInvitationIdNot(UUID meetingId, UUID excludedInvitationId);
 
     @Query("SELECT i FROM Invitations i WHERE i.user.id = :userId")
     List<Invitations> findByUserId(@Param("userId") UUID userId);

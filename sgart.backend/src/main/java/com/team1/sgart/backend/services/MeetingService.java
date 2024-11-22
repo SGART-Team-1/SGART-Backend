@@ -21,67 +21,97 @@ import java.util.stream.Collectors;
 @Service
 public class MeetingService {
 
-    @Autowired
-    private UserDao userDao;
+	@Autowired
+	private UserDao userDao;
 
-    @Autowired
-    private MeetingsDao meetingDao;
+	@Autowired
+	private MeetingsDao meetingDao;
 
-    @Autowired
-    private InvitationsDao invitationDao;
+	@Autowired
+	private InvitationsDao invitationDao;
 
-    // Método para crear la reunión
-    public Meetings createMeeting(String meetingTitle, boolean meetingAllDay, LocalDate meetingDate, LocalTime meetingStartTime,
-                                  LocalTime meetingEndTime, String observations, UUID organizerId, UUID locationId) {
-        Meetings meeting = new Meetings(meetingTitle, meetingDate, meetingAllDay, meetingStartTime, meetingEndTime, observations, organizerId, locationId);
-        return meetingDao.save(meeting);
-    }
+	// Método para crear la reunión
+	public Meetings createMeeting(String meetingTitle, boolean meetingAllDay, LocalDate meetingDate,
+			LocalTime meetingStartTime, LocalTime meetingEndTime, String observations, UUID organizerId,
+			UUID locationId) {
+		Meetings meeting = new Meetings(meetingTitle, meetingDate, meetingAllDay, meetingStartTime, meetingEndTime,
+				observations, organizerId, locationId);
+		return meetingDao.save(meeting);
+	}
 
-    // Método para obtener todos los usuarios habilitados
-    public List<User> getAvailableUsers() {
-        return userDao.findAllNotBlocked(); // Solo los usuarios no bloqueados
-    }
+	// Método para obtener todos los usuarios habilitados
+	public List<User> getAvailableUsers() {
+		return userDao.findAllNotBlocked(); // Solo los usuarios no bloqueados
+	}
 
-    // Método para invitar a un usuario a una reunión
-    public Invitations inviteUserToMeeting(Meetings meeting, User user, InvitationStatus status) {
-        Invitations invitation = new Invitations( meeting, user, status, false, null);
-        return invitationDao.save(invitation);
-    }
+	// Método para invitar a un usuario a una reunión
+	public Invitations inviteUserToMeeting(Meetings meeting, User user, InvitationStatus status) {
+		Invitations invitation = new Invitations(meeting, user, status, false, null);
+		return invitationDao.save(invitation);
+	}
 
-    // Obtener una reunión por su ID
-    public Optional<Meetings> getMeetingById(UUID meetingId) {
-        return meetingDao.findById(meetingId);
-    }
+	// Obtener una reunión por su ID
+	public Optional<Meetings> getMeetingById(UUID meetingId) {
+		return meetingDao.findById(meetingId);
+	}
 
-    // Obtener asistentes de una reunión por su ID
-    public List<UUID> getAttendeesForMeeting(Meetings meeting) {
-        List<Invitations> invitations = invitationDao.findByMeetingId(meeting.getMeetingId());
+	// Obtener asistentes de una reunión por su ID
+	public List<UUID> getAttendeesForMeeting(Meetings meeting) {
+		List<Invitations> invitations = invitationDao.findByMeetingId(meeting.getMeetingId());
 
-        // Filtramos aquellas con estado ACEPTADA y devolvemos los usuarios
-        return invitations.stream()
-                .filter(invitation -> invitation.getInvitationStatus() == InvitationStatus.ACEPTADA)
-                .map(invitation -> invitation.getUser().getID())
-                .collect(Collectors.toList());
-    }
+		// Filtramos aquellas con estado ACEPTADA y devolvemos los usuarios
+		return invitations.stream().filter(invitation -> invitation.getInvitationStatus() == InvitationStatus.ACEPTADA)
+				.map(invitation -> invitation.getUser().getID()).collect(Collectors.toList());
+	}
 
-    // Obtener detalles de las invitaciones por ID de reunión
-    public List<Object[]> getDetailedInvitationsForMeeting(UUID meetingId) {
-        return invitationDao.findDetailedInvitationsByMeetingId(meetingId);
-    }
-    
-    // Método para cancelar una reunión MANUAL por organizador
-    public boolean cancelMeetingByOrganizer(UUID meetingId, UUID organizerId) {
-        // Recuperamos la reunión por su ID
-        Optional<Meetings> meetingOpt = meetingDao.findById(meetingId);
-        if (meetingOpt.isEmpty()) {
-            throw new RuntimeException("Reunión no encontrada");
-        }
+	// Obtener detalles de las invitaciones por ID de reunión
+	public List<Object[]> getDetailedInvitationsForMeeting(UUID meetingId) {
+		return invitationDao.findDetailedInvitationsByMeetingId(meetingId);
+	}
 
-        Meetings meeting = meetingOpt.get();
-        meetingDao.delete(meeting); //cancelada = eliminada 
+	// Método para cancelar una reunión MANUAL por organizador
+	public boolean cancelMeetingByOrganizer(UUID meetingId) {
+		// Recuperamos la reunión por su ID
+		Optional<Meetings> meetingOpt = meetingDao.findById(meetingId);
+		if (meetingOpt.isEmpty()) {
+			throw new RuntimeException("Reunión no encontrada");
+		}
 
-        return true;
-    }
+		Meetings meeting = meetingOpt.get();
+		meetingDao.delete(meeting); // cancelada = eliminada
 
-    
+		return true;
+	}
+
+	// Método para cancelar una reunión si todas las invitaciones están rechazadas
+	public boolean cancelMeetingIfAllInvitationsRejected(UUID meetingId, UUID excludedInvitationId) {
+		
+		// Recuperamos todas las invitaciones EXCEPTO la que se está procesando por si no se ha guardado Rechazada aún
+		List<Invitations> invitations = invitationDao.findByMeetingIdAndInvitationIdNot(meetingId, excludedInvitationId);
+
+
+		if (invitations.isEmpty()) {
+			throw new RuntimeException("No se encontraron invitaciones para la reunión");
+		}
+
+		// Verificamos que todas las invitaciones están rechazadas
+		boolean allRejected = invitations.stream()
+				.allMatch(invitation -> invitation.getInvitationStatus().equals(InvitationStatus.RECHAZADA));
+
+		if (allRejected) {
+// ------------------------------------------------------------------------------------Esto es igual que cancelMeetingByOrganizer se podría juntar :P
+			Optional<Meetings> meetingOpt = meetingDao.findById(meetingId);
+			if (meetingOpt.isEmpty()) {
+				throw new RuntimeException("Reunión no encontrada");
+			}
+
+			Meetings meeting = meetingOpt.get();
+			meetingDao.delete(meeting);
+			return true;
+			//--------------------------------------------------------------------------
+		}
+
+		return false;
+	}
+
 }

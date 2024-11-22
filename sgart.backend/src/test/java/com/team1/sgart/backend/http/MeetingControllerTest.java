@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import com.team1.sgart.backend.dao.InvitationsDao;
-
+import com.team1.sgart.backend.dao.MeetingsDao;
 import com.team1.sgart.backend.model.InvitationStatus;
-
+import com.team1.sgart.backend.model.Invitations;
 import com.team1.sgart.backend.model.Meetings;
 import com.team1.sgart.backend.model.User;
 import com.team1.sgart.backend.services.MeetingService;
@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,9 +30,12 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,12 +50,17 @@ class MeetingControllerTest {
     
     @MockBean
     private InvitationsDao invitationDao;
+    
+    @MockBean
+    private MeetingsDao meetingDao;
 
     @MockBean
     private UserService userService;
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    
 
     @Test
     void createMeeting_ShouldReturnMeeting() throws Exception {
@@ -134,4 +143,68 @@ class MeetingControllerTest {
                 .andExpect(jsonPath("$[0].name").value("John Doe"))
                 .andExpect(jsonPath("$[1].name").value("Jane Doe"));
     }
+    
+    @Test
+    public void testCancelMeetingOrganizer_Success() throws Exception {
+    	UUID meetingId = UUID.randomUUID();
+
+        // Simula el comportamiento del servicio para que devuelva true
+        Mockito.when(meetingService.cancelMeetingByOrganizer(meetingId)).thenReturn(true);
+
+        // Realiza la solicitud DELETE al controlador
+        mockMvc.perform(delete("/api/meetings/{meetingId}", meetingId)
+                .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+                
+    }
+    
+    @Test
+    public void testCancelMeetingOrganizer_NotFound() throws Exception {
+        UUID meetingId = UUID.randomUUID();
+
+        // Simula el comportamiento del servicio para reunión que no existe
+        Mockito.when(meetingService.cancelMeetingByOrganizer(meetingId))
+                .thenThrow(new RuntimeException("Reunión no encontrada"));
+
+        // Realiza la solicitud DELETE al controlador con la ruta completa
+        mockMvc.perform(delete("/api/meetings/{meetingId}", meetingId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound()); // 404 Not Found
+    }
+    
+    @Test
+    public void testCancelMeetingIfAllInvitationsRejected_Success() throws Exception {
+        UUID meetingId = UUID.randomUUID();
+        UUID excludedUserId = UUID.randomUUID();
+
+        // Simula el comportamiento del servicio para que la cancelación sea exitosa
+        Mockito.when(meetingService.cancelMeetingIfAllInvitationsRejected(meetingId, excludedUserId)).thenReturn(true);
+
+        // Realiza la solicitud POST al controlador
+        mockMvc.perform(post("/api/meetings/cancel/rejected")
+                .param("meetingId", meetingId.toString())
+                .param("excludedUserId", excludedUserId.toString())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) // Espera que la respuesta sea 200 OK
+                .andExpect(content().string("Reunión cancelada debido a que todas las invitaciones fueron rechazadas"));
+    }
+
+    
+    @Test
+    public void testCancelMeetingIfAllInvitationsRejected_BadRequest() throws Exception {
+        UUID meetingId = UUID.randomUUID();
+        UUID excludedUserId = UUID.randomUUID();
+
+        // Simula el comportamiento del servicio para que no se pueda cancelar la reunión
+        Mockito.when(meetingService.cancelMeetingIfAllInvitationsRejected(meetingId, excludedUserId)).thenReturn(false);
+
+        // Realiza la solicitud POST al controlador
+        mockMvc.perform(post("/api/meetings/cancel/rejected")
+                .param("meetingId", meetingId.toString())
+                .param("excludedUserId", excludedUserId.toString())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest()) //400 Bad Request
+                .andExpect(content().string("La reunión sigue adelante, hay invitaciones pendientes o aceptadas"));
+    }
+
 }
+   
