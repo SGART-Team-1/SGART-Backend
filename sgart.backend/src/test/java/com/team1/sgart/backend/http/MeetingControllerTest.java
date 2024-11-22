@@ -144,6 +144,7 @@ class MeetingControllerTest {
                 .andExpect(jsonPath("$[1].name").value("Jane Doe"));
     }
     
+    //TDD cancelar reunión, organizador pulsa cancelar
     @Test
     public void testCancelMeetingOrganizer_Success() throws Exception {
     	UUID meetingId = UUID.randomUUID();
@@ -171,6 +172,7 @@ class MeetingControllerTest {
                 .andExpect(status().isNotFound()); // 404 Not Found
     }
     
+    //TDD cancelar reunión automático
     @Test
     public void testCancelMeetingIfAllInvitationsRejected_Success() throws Exception {
         UUID meetingId = UUID.randomUUID();
@@ -184,7 +186,7 @@ class MeetingControllerTest {
                 .param("meetingId", meetingId.toString())
                 .param("excludedUserId", excludedUserId.toString())
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // Espera que la respuesta sea 200 OK
+                .andExpect(status().isOk()) //200 OK
                 .andExpect(content().string("Reunión cancelada debido a que todas las invitaciones fueron rechazadas"));
     }
 
