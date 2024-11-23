@@ -1,8 +1,6 @@
 package com.team1.sgart.backend.http;
 
-import com.team1.sgart.backend.http.AdminCalendarController;
 import com.team1.sgart.backend.model.InvitationsDTO;
-import com.team1.sgart.backend.model.Meetings;
 import com.team1.sgart.backend.model.MeetingsDTO;
 import com.team1.sgart.backend.services.CalendarService;
 import org.junit.jupiter.api.Test;
@@ -11,6 +9,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +31,7 @@ public class AdminCalendarTest {
     @Test
     public void testGetAllMeetings() {
         // Arrange
-        MeetingsDTO mockMeeting = new MeetingsDTO(UUID.randomUUID(), "Test Meeting", false, null, null, UUID.randomUUID());
+        MeetingsDTO mockMeeting = new MeetingsDTO(UUID.randomUUID(), "Test Meeting", false, LocalDate.parse("2024-12-15"),  LocalTime.parse("09:00"), LocalTime.parse("10:00"), "", UUID.randomUUID(), "", "");
         when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(mockMeeting));
 
         // Act
@@ -86,10 +86,20 @@ public class AdminCalendarTest {
     public void testLoadMeetings_ServiceLayer() {
         // Arrange
         UUID meetingId = UUID.randomUUID();
-        Meetings mockMeeting = new Meetings("Team Meeting", false, null, null, UUID.randomUUID());
-        mockMeeting.setMeetingId(meetingId);
+        MeetingsDTO mockMeeting = new MeetingsDTO(
+            meetingId, 
+            "Team Meeting", // Cambiado el título para que coincida con el assert
+            false, 
+            LocalDate.parse("2024-12-15"), 
+            LocalTime.parse("09:00"), 
+            LocalTime.parse("10:00"), 
+            "", 
+            UUID.randomUUID(), 
+            "", 
+            ""
+        );
 
-        when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(new MeetingsDTO(meetingId, "Team Meeting", false, null, null, UUID.randomUUID())));
+        when(calendarService.loadMeetings()).thenReturn(Collections.singletonList(mockMeeting));
 
         // Act
         List<MeetingsDTO> meetings = calendarService.loadMeetings();
@@ -98,8 +108,9 @@ public class AdminCalendarTest {
         assertNotNull(meetings);
         assertEquals(1, meetings.size());
         assertEquals(meetingId, meetings.get(0).getMeetingId());
-        assertEquals("Team Meeting", meetings.get(0).getMeetingTitle());
+        assertEquals("Team Meeting", meetings.get(0).getMeetingTitle()); // Asegúrate de que coincida el título
     }
+
 
     @Test
     public void testGetDetailedInvitationsByMeetingId_ServiceLayer() {

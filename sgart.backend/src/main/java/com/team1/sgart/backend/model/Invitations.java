@@ -1,9 +1,6 @@
 package com.team1.sgart.backend.model;
 
 import jakarta.persistence.*;
-import java.time.LocalTime;
-import java.util.UUID;
-
 
 @Entity
 @Table(name = "SGART_InvitationsTable")
@@ -34,10 +31,10 @@ public class Invitations {
     public Invitations() {}
 
     // Constructor con parámetros
-    public Invitations(Meetings meeting, User user, String invitationStatus, boolean userAttendance, String rejectionReason) {
+    public Invitations(Meetings meeting, User user, InvitationStatus invitationStatus, boolean userAttendance, String rejectionReason) {
         this.meeting = meeting;
         this.user = user;
-        this.invitationStatus = invitationStatus;
+        this.invitationStatus = invitationStatus.toString();
         this.userAttendance = userAttendance;
         this.rejectionReason = rejectionReason;
     }
@@ -48,8 +45,8 @@ public class Invitations {
         return invitation_id;
     }
 
-    public void setInvitationId(int invitation_id) {
-        this.invitation_id = invitation_id;
+    public void setInvitationId(int invitationId) {
+        this.invitation_id = invitationId;
     }
 
     public Meetings getMeeting() {

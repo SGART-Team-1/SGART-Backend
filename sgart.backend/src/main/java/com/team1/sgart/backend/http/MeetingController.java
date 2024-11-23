@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -87,10 +88,13 @@ public class MeetingController {
     
     // Editar una reunión
     @PostMapping("/modify/{meetingId}")
-	public ResponseEntity<String> editMeeting(@PathVariable UUID meetingId, @RequestBody Meetings changeMeeting) {
-		
-        meetingService.modifyMeeting(meetingId, changeMeeting);
-        return ResponseEntity.status(HttpStatus.OK).body("Reunión modificada correctamente");
+    public ResponseEntity<String> editMeeting(@PathVariable UUID meetingId, @RequestBody Meetings changeMeeting) {
+        try {
+            meetingService.modifyMeeting(meetingId, changeMeeting);
+            return ResponseEntity.status(HttpStatus.OK).body("Reunión modificada correctamente");
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        }
     }
     
 }

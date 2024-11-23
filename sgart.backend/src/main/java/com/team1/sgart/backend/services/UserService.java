@@ -54,13 +54,13 @@ public class UserService {
 			Optional<User> userToModify = userDao.findByEmail(email);
 			if(userToModify.isPresent()) {
 				User updatedUser = userToModify.get();
-				actualizarCampo(user::setName, updatedUser.getName());
-			    actualizarCampo(user::setLastName, updatedUser.getLastName());
-			    actualizarCampo(user::setDepartment, updatedUser.getDepartment());
-			    actualizarCampo(user::setCenter, updatedUser.getCenter());
-			    actualizarCampo(user::setEmail, updatedUser.getEmail());
-			    actualizarCampo(user::setHiringDate, updatedUser.getHiringDate());
-			    actualizarCampo(user::setProfile, updatedUser.getProfile());
+				actualizarCampo(updatedUser::setName, user.getName());
+			    actualizarCampo(updatedUser::setLastName, user.getLastName());
+			    actualizarCampo(updatedUser::setDepartment, user.getDepartment());
+			    actualizarCampo(updatedUser::setCenter, user.getCenter());
+			    actualizarCampo(updatedUser::setEmail, user.getEmail());
+			    actualizarCampo(updatedUser::setHiringDate, user.getHiringDate());
+			    actualizarCampo(updatedUser::setProfile, user.getProfile());
 			    userDao.save(updatedUser);
 			}
 		}

@@ -42,7 +42,7 @@ class UserServiceTest {
 
     private User user;
     private Admin admin;
-    private UserDTO jsonPerfilModificado;
+    private UserDTO jsonPerfilModificado = new UserDTO();
 
     @BeforeEach
     void setUp() {
@@ -51,7 +51,7 @@ class UserServiceTest {
     	
     	admin = new Admin("admin", "example", "admin@example.com", PASSWORD_FUERTE);
     	
-    	jsonPerfilModificado.setID(UUID.randomUUID());
+    	jsonPerfilModificado.setID(user.getID());
     	jsonPerfilModificado.setName("John");
     	jsonPerfilModificado.setLastName("Marston");
     	jsonPerfilModificado.setDepartment("Quality");
@@ -103,18 +103,23 @@ class UserServiceTest {
     
     @Test
     void testModificarUserExistente() {
-                
+        // Datos de prueba
         Optional<User> optionalUser = Optional.of(user);
-        
+
         User userModificado = new User();
-        userModificado.setName(NUEVO_NOMBRE);
         userModificado.setEmail("carlos.romero@example.com");
+        userModificado.setName(NUEVO_NOMBRE);
 
+        // Configurar los mocks
         Mockito.when(userDao.findByEmail(user.getEmail())).thenReturn(optionalUser); // Simular que el usuario existe
-        Mockito.when(userDao.save(userModificado)).thenReturn(userModificado);
+        Mockito.when(userDao.save(Mockito.any(User.class))).thenReturn(userModificado); // Simular guardado de usuario
 
+        // Ejecutar el método
         userService.modificarUser(userModificado);
-        assertEquals(NUEVO_NOMBRE, userModificado.getName()); // Verificar que el perfil ha sido actualizado
+
+        // Verificar que el perfil ha sido actualizado
+        assertEquals(NUEVO_NOMBRE, user.getName());
+        Mockito.verify(userDao).save(user);
     }
 
     @Test
@@ -186,9 +191,9 @@ class UserServiceTest {
     
     @Test
     void testModificarPerfilUserExistente() {
-                
+        // Datos de prueba
         Optional<User> optionalUser = Optional.of(user);
-        
+
         User userPerfilModificado = new User();
         userPerfilModificado.setID(user.getID());
         userPerfilModificado.setName(jsonPerfilModificado.getName());
@@ -196,12 +201,21 @@ class UserServiceTest {
         userPerfilModificado.setDepartment(jsonPerfilModificado.getDepartment());
         userPerfilModificado.setCenter(jsonPerfilModificado.getCenter());
         userPerfilModificado.setProfile(jsonPerfilModificado.getProfile());
-                
-        Mockito.when(userDao.findById(user.getID())).thenReturn(optionalUser); // Simular que el usuario existe
-        Mockito.when(userDao.save(userPerfilModificado)).thenReturn(userPerfilModificado);
 
+        // Configurar los mocks
+        Mockito.when(userDao.findById(user.getID())).thenReturn(optionalUser); // Simular que el usuario existe
+        Mockito.when(userDao.save(Mockito.any(User.class))).thenAnswer(invocation -> invocation.getArgument(0)); // Simular guardado de usuario
+
+        // Ejecutar el método
         userService.modificarPerfilUser(jsonPerfilModificado);
-        assertEquals("John", userPerfilModificado.getName()); // Verificar que el perfil ha sido actualizado
+
+        // Verificar que el perfil ha sido actualizado
+        assertEquals("John", user.getName());
+        assertEquals("Marston", user.getLastName());
+        assertEquals("Quality", user.getDepartment());
+        assertEquals("Royal City", user.getCenter());
+        assertEquals("Scrum Master", user.getProfile());
+        Mockito.verify(userDao).save(user); // Verificar que el perfil ha sido actualizado
     }
 
     @Test

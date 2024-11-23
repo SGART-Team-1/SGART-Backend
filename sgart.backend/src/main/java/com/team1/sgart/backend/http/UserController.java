@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.team1.sgart.backend.services.UserService;
 
@@ -45,8 +46,12 @@ public class UserController {
 	
 	@PostMapping("/modificarPerfil")
 	public ResponseEntity<String> modificarPerfil(@RequestBody UserDTO changesInUser) {
-		userService.modificarPerfilUser(changesInUser);
-		return ResponseEntity.status(HttpStatus.OK).body("Perfil modificado correctamente");
+		try {
+			userService.modificarPerfilUser(changesInUser);
+			return ResponseEntity.status(HttpStatus.OK).body("Perfil modificado correctamente");
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        }
 	}
 
 @PostMapping("/login")

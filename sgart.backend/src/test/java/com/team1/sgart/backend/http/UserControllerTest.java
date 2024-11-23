@@ -3,6 +3,7 @@ package com.team1.sgart.backend.http;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team1.sgart.backend.model.Admin;
 import com.team1.sgart.backend.model.GenericUser;
+import com.team1.sgart.backend.model.Meetings;
 import com.team1.sgart.backend.model.User;
 import com.team1.sgart.backend.model.UserDTO;
 import com.team1.sgart.backend.services.UserService;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,9 +49,9 @@ class UserControllerTest {
         changesInProfile = "{"
                 + "\"name\":\"John\","
                 + "\"lastName\": \"Marston\","
-                + "\"department\":\"Quality\""
-                + "\"center\":\"Royal City\""
-                + "\"profile\":\"Scrum Master\""
+                + "\"department\":\"Quality\","
+                + "\"center\":\"Royal City\","
+                + "\"profile\":\"Scrum Master\","
                 + "\"id\":\"\""
                 + "}";
     }
@@ -202,8 +204,9 @@ class UserControllerTest {
     	UserDTO userDTO = new UserDTO();
     	        
         Mockito.doNothing().when(userService).modificarPerfilUser(userDTO);
-        mockMvc.perform(post(URLMODIFICAR_PERFIL).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post(URLMODIFICAR_PERFIL).contentType(MediaType.APPLICATION_JSON) 
                 .content(changesInProfile))
+				.andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(content().string("Perfil modificado correctamente"));
     }
@@ -216,6 +219,7 @@ class UserControllerTest {
         
         mockMvc.perform(post(URLMODIFICAR_PERFIL).contentType(MediaType.APPLICATION_JSON)
                 .content(changesInProfile))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+        		.andExpect(content().string("Usuario no encontrado"));
     }
 }
